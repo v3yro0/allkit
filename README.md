@@ -1,4 +1,6 @@
-# allkit · v1.0.0 beta
+# allkit · v1.1 beta
+
+update: added croatian, japanese and spanish, removed herobrine 
 
 **one app. 30 tools. endless possibilities.**
 
@@ -56,7 +58,7 @@ Built using React, Capacitor, and Electron, with a shared interface across platf
 
 ## 🚀 status
 
-**allkit v1.0.0-beta**
+**allkit v1.1.0-beta**
 
 This is a beta release. Some features depend on device hardware, permissions, or an internet connection. Physical-device testing and platform-specific limitations are documented in `docs/VALIDATION.md`.
 
