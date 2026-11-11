@@ -1,0 +1,77 @@
+
+name: Build AllKit unsigned iOS IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout AllKit
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Extract AllKit source
+        run: |
+          unzip -q allkit-source.zip -d source
+
+      - name: Install dependencies
+        working-directory: source
+        run: npm ci
+
+      - name: Build web app
+        working-directory: source
+        run: npm run build
+
+      - name: Sync Capacitor iOS
+        working-directory: source
+        run: npm run sync
+
+      - name: Build iOS app
+        working-directory: source
+        run: |
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination "generic/platform=iOS" \
+            -derivedDataPath build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Package unsigned IPA
+        working-directory: source
+        run: |
+          APP_PATH="build/DerivedData/Build/Products/Release-iphoneos/App.app"
+
+          if [ ! -d "$APP_PATH" ]; then
+            echo "ERROR: App.app not found!"
+            exit 1
+          fi
+
+          mkdir -p build/Payload
+          cp -R "$APP_PATH" build/Payload/
+
+          cd build
+          zip -qry AllKit-unsigned.ipa Payload
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: AllKit-unsigned-IPA
+          path: source/build/AllKit-unsigned.ipa
+          retention-days: 14
