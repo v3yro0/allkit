@@ -16,15 +16,15 @@ jobs:
       - name: Checkout AllKit
         uses: actions/checkout@v4
 
+      - name: Extract source
+        run: unzip -q allkit-source.zip -d source
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
-
-      - name: Extract AllKit source
-        run: |
-          unzip -q allkit-source.zip -d source
+          cache-dependency-path: source/package-lock.json
 
       - name: Install dependencies
         working-directory: source
@@ -34,7 +34,7 @@ jobs:
         working-directory: source
         run: npm run build
 
-      - name: Sync Capacitor iOS
+      - name: Sync Capacitor
         working-directory: source
         run: npm run sync
 
@@ -53,19 +53,18 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             build
 
-      - name: Package unsigned IPA
+      - name: Package IPA
         working-directory: source
         run: |
           APP_PATH="build/DerivedData/Build/Products/Release-iphoneos/App.app"
 
-          if [ ! -d "$APP_PATH" ]; then
-            echo "ERROR: App.app not found!"
+          test -d "$APP_PATH" || {
+            echo "App.app not found!"
             exit 1
-          fi
+          }
 
           mkdir -p build/Payload
           cp -R "$APP_PATH" build/Payload/
-
           cd build
           zip -qry AllKit-unsigned.ipa Payload
 
